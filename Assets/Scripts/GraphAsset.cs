@@ -13,11 +13,12 @@ public class GraphAsset: ScriptableObject
 public class SerializableNode
 {
 	public Vector2 position;
-	public List<SerializableEdge> edges;
+	public List<SerializableEdge> edges = new List<SerializableEdge>();
 }
 
 [Serializable]
 public class SerializableEdge
 {
-	public int nodeId;
+    public int fromId;
+	public int toId;
 }

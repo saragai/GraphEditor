@@ -23,7 +23,7 @@ public class Graph
 
 			foreach( var serializableEdge in serializableNode.edges )
 			{
-				nodes[i].ConnectTo( nodes[serializableEdge.nodeId] );
+				nodes[i].ConnectTo( nodes[serializableEdge.toId] );
 			}
 		}
 	}
