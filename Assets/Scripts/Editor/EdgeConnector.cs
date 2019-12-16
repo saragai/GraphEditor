@@ -15,12 +15,20 @@ public class EdgeConnector: MouseManipulator
 
     public EdgeConnector()
     {
+        activators.Add(new ManipulatorActivationFilter() { button = MouseButton.LeftMouse });
+
         m_Active = false;
 
         m_AddEdgeMenu = new ContextualMenuManipulator(evt =>
         {
             if (evt.target is NodeElement node)
             {
+                if (!node.ContainsPoint(node.WorldToLocal(evt.mousePosition)))
+                {
+                    evt.StopImmediatePropagation();
+                    return;
+                }
+
                 evt.menu.AppendAction(
                     "Add Edge",
                     (DropdownMenuAction menuItem) =>
@@ -44,10 +52,11 @@ public class EdgeConnector: MouseManipulator
         target.RegisterCallback<MouseDownEvent>(OnMouseDown);
         target.RegisterCallback<MouseUpEvent>(OnMouseUp);
         target.RegisterCallback<MouseMoveEvent>(OnMouseMove);
+        target.RegisterCallback<MouseCaptureOutEvent>(OnCaptureOut);
 
         target.AddManipulator(m_AddEdgeMenu);
-
     }
+
     protected override void UnregisterCallbacksFromTarget()
     {
         target.RemoveManipulator(m_AddEdgeMenu);
@@ -55,6 +64,7 @@ public class EdgeConnector: MouseManipulator
         target.UnregisterCallback<MouseDownEvent>(OnMouseDown);
         target.UnregisterCallback<MouseUpEvent>(OnMouseUp);
         target.UnregisterCallback<MouseMoveEvent>(OnMouseMove);
+        target.UnregisterCallback<MouseCaptureOutEvent>(OnCaptureOut);
 
         m_Graph = null;
     }
@@ -66,28 +76,38 @@ public class EdgeConnector: MouseManipulator
             evt.StopImmediatePropagation();
             return;
         }
+
+        if (!CanStartManipulation(evt))
+        {
+            return;
+        }
     }
 
     protected void OnMouseUp(MouseUpEvent evt)
     {
-        if (m_Active)
+        if (!m_Active)
+            return;
+
+        if (!CanStopManipulation(evt))
         {
-            var node = GetDesignatedNode(evt.originalMousePosition);
-
-            if (node == null || CheckOverlapping(node))
-            {
-                m_Graph.RemoveEdgeElement(m_ConnectingEdge);
-            }
-            else
-            {
-                m_ConnectingEdge.ConnectTo(node);
-                m_Graph.SerializeEdge(m_ConnectingEdge);
-            }
-
-            m_Active = false;
-            m_ConnectingEdge = null;
-            target.ReleaseMouse();
+            return;
         }
+
+        var node = GetDesignatedNode(evt.originalMousePosition);
+
+        if (node == null || CheckOverlapping(node))
+        {
+            m_Graph.RemoveEdgeElement(m_ConnectingEdge);
+        }
+        else
+        {
+            m_ConnectingEdge.ConnectTo(node);
+            m_Graph.SerializeEdge(m_ConnectingEdge);
+        }
+
+        m_Active = false;
+        m_ConnectingEdge = null;
+        target.ReleaseMouse();
     }
 
     protected void OnMouseMove(MouseMoveEvent evt)
@@ -96,6 +116,14 @@ public class EdgeConnector: MouseManipulator
         {
             m_ConnectingEdge.CandidatePosition = evt.originalMousePosition;
             m_ConnectingEdge.MarkDirtyRepaint();
+        }
+    }
+
+    private void OnCaptureOut(MouseCaptureOutEvent evt)
+    {
+        if (m_Active)
+        {
+            Abort();
         }
     }
 
@@ -121,5 +149,13 @@ public class EdgeConnector: MouseManipulator
             {
                 return edge.From == m_ConnectingEdge.From && edge.To == toNode;
             });
+    }
+
+    private void Abort()
+    {
+        m_Graph.RemoveEdgeElement(m_ConnectingEdge);
+        m_Active = false;
+        m_ConnectingEdge = null;
+        target.ReleaseMouse();
     }
 }

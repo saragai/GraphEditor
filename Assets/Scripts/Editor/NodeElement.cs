@@ -6,19 +6,19 @@ using UnityEditor;
 
 public class NodeElement : Box
 {
-    public Color color;
-    public Vector2 position;
-
     private readonly NodeDragger m_Mover;
 
     public SerializableNode serializableNode;
 
     public NodeElement(SerializableNode node, string name)
     {
+        serializableNode = node;
+
         style.position = Position.Absolute;
         style.height = 50;
         style.width = 100;
         transform.position = node.position;
+
         Add(new Label(name));
 
         this.AddManipulator(new NodeDragger());
@@ -39,8 +39,6 @@ public class NodeElement : Box
                     DropdownMenuAction.AlwaysEnabled);
             }
         }));
-
-        serializableNode = node;
     }
 
     public Vector2 GetStartPosition()
