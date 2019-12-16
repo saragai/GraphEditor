@@ -23,22 +23,24 @@ public class NodeElement : Box
 
         this.AddManipulator(new NodeDragger());
         this.AddManipulator(new EdgeConnector());
+        this.AddManipulator(new ContextualMenuManipulator(OnContextualMenuPopulate));
+    }
 
-        this.AddManipulator(new ContextualMenuManipulator(evt =>
+    private void OnContextualMenuPopulate(ContextualMenuPopulateEvent evt)
+    {
+        if (evt.target is NodeElement)
         {
-            if (evt.target is NodeElement)
-            {
-                evt.menu.AppendSeparator();
-                evt.menu.AppendAction(
-                    "Remove Node",
-                    menuItem =>
-                    {
-                        var graph = GetFirstAncestorOfType<GraphEditorElement>();
-                        graph.RemoveNodeElement(this);
-                    },
-                    DropdownMenuAction.AlwaysEnabled);
-            }
-        }));
+            evt.menu.AppendAction(
+                "Remove Node",
+                RemoveNodeMenuAction,
+                DropdownMenuAction.AlwaysEnabled);
+        }
+    }
+
+    private void RemoveNodeMenuAction(DropdownMenuAction menuAction)
+    {
+        var graph = GetFirstAncestorOfType<GraphEditorElement>();
+        graph.RemoveNodeElement(this);
     }
 
     public Vector2 GetStartPosition()

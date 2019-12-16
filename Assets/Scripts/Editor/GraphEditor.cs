@@ -79,19 +79,7 @@ public class GraphEditorElement : VisualElement
         style.flexDirection = FlexDirection.Column;
         transform.position = new Vector3(0, 0);
 
-        this.AddManipulator(new ContextualMenuManipulator(evt =>
-        {
-            if (evt.target is GraphEditorElement)
-            {
-                evt.menu.AppendAction(
-                    "Add Node",
-                    menuItem =>
-                    {
-                        AddNode(menuItem.eventInfo.localMousePosition);
-                    },
-                    DropdownMenuAction.AlwaysEnabled);
-            }
-        }));
+        this.AddManipulator(new ContextualMenuManipulator(OnContextualMenuPopulate));
 
         Nodes = new List<NodeElement>();
         Edges = new List<EdgeElement>();
@@ -110,9 +98,26 @@ public class GraphEditorElement : VisualElement
         }
     }
 
+    private void OnContextualMenuPopulate(ContextualMenuPopulateEvent evt)
+    {
+        if (evt.target is GraphEditorElement)
+        {
+            evt.menu.AppendAction(
+                "Add Node",
+                AddNodeMenuAction,
+                DropdownMenuAction.AlwaysEnabled);
+            evt.menu.AppendSeparator();
+        }
+    }
+
+    private void AddNodeMenuAction(DropdownMenuAction menuAction)
+    {
+        AddNode(menuAction.eventInfo.localMousePosition);
+    }
+
     public void DrawEdge()
     {
-        foreach(var edge in Edges)
+        foreach (var edge in Edges)
         {
             edge.DrawEdge();
         }

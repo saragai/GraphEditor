@@ -19,30 +19,32 @@ public class EdgeConnector: MouseManipulator
 
         m_Active = false;
 
-        m_AddEdgeMenu = new ContextualMenuManipulator(evt =>
+        m_AddEdgeMenu = new ContextualMenuManipulator(OnContextualMenuPopulate);
+    }
+
+    private void OnContextualMenuPopulate(ContextualMenuPopulateEvent evt)
+    {
+        if (evt.target is NodeElement node)
         {
-            if (evt.target is NodeElement node)
+            if (!node.ContainsPoint(node.WorldToLocal(evt.mousePosition)))
             {
-                if (!node.ContainsPoint(node.WorldToLocal(evt.mousePosition)))
-                {
-                    evt.StopImmediatePropagation();
-                    return;
-                }
-
-                evt.menu.AppendAction(
-                    "Add Edge",
-                    (DropdownMenuAction menuItem) =>
-                    {
-                        m_Active = true;
-
-                        m_Graph = target.GetFirstAncestorOfType<GraphEditorElement>();
-                        m_ConnectingEdge = m_Graph.CreateEdgeElement(node, menuItem.eventInfo.mousePosition);
-
-                        target.CaptureMouse();
-                    },
-                    DropdownMenuAction.AlwaysEnabled);
+                evt.StopImmediatePropagation();
+                return;
             }
-        });
+
+            evt.menu.AppendAction(
+                "Add Edge",
+                (DropdownMenuAction menuItem) =>
+                {
+                    m_Active = true;
+
+                    m_Graph = target.GetFirstAncestorOfType<GraphEditorElement>();
+                    m_ConnectingEdge = m_Graph.CreateEdgeElement(node, menuItem.eventInfo.mousePosition);
+
+                    target.CaptureMouse();
+                },
+                DropdownMenuAction.AlwaysEnabled);
+        }
     }
 
     protected override void RegisterCallbacksOnTarget()
