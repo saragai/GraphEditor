@@ -18,30 +18,32 @@ public class GraphEditor : EditorWindow
     {
         VisualElement root = this.rootVisualElement;
 
+        root.Add(new NodeElement("One", Color.red, new Vector2(100, 50)));
+        root.Add(new NodeElement("Two", Color.yellow, new Vector2(200, 50)));
 
-        m_Nodes.Add(new NodeElement(new Node(), "one", Color.red, new Vector2(100, 50)));
-        m_Nodes.Add(new NodeElement(new Node(), "two", Color.yellow, new Vector2(200, 50)));
+        root.AddManipulator(new ContextualMenuManipulator(OnContextMenuPopulate));
+    }
 
-        foreach(var node in m_Nodes)
-        {
-            root.Add(node);
-        }
+    void OnContextMenuPopulate(ContextualMenuPopulateEvent evt)
+    {
+        // 項目を追加
+        evt.menu.AppendAction(
+            "Add Node",  // 項目名
+            AddEdgeMenuAction,  // 選択時の挙動
+            DropdownMenuAction.AlwaysEnabled  // 選択可能かどうか
+            );
+    }
 
-        m_Nodes[0].node.ConnectTo(m_Nodes[1].node);
+    void AddEdgeMenuAction(DropdownMenuAction menuAction)
+    {
+        Debug.Log("Add Node");
     }
 
     private void OnGUI()
     {
-        foreach(var node in m_Nodes)
-        {
-            foreach(var edge in node.node.OutEdges)
-            {
-                // DrawEdge(node, edge.dstNode);
-            }
-        }
     }
 
-    private void DrawEdge(INode startNode, INode endNode)
+    private void DrawEdge(NodeElement startNode, NodeElement endNode)
     {
         var startPos = startNode.GetStartPosition();
         var endPos = endNode.GetEndPosition();
@@ -57,12 +59,4 @@ public class GraphEditor : EditorWindow
             texture: null,
             width: 2f);
     }
-}
-
-public interface INode
-{
-    Vector3 GetStartPosition();
-    Vector3 GetEndPosition();
-    Vector3 GetStartNorm();
-    Vector3 GetEndNorm();
 }
