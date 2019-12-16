@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -71,10 +72,9 @@ public class EdgeConnector: MouseManipulator
     {
         if (m_Active)
         {
-            // Whether mouse is on any node
             var node = GetDesignatedNode(evt.originalMousePosition);
 
-            if (node == null)
+            if (node == null || CheckOverlapping(node))
             {
                 m_Graph.RemoveEdgeElement(m_ConnectingEdge);
             }
@@ -103,7 +103,7 @@ public class EdgeConnector: MouseManipulator
     {
         foreach (NodeElement node in m_Graph.Query<NodeElement>().Build().ToList())
         {
-            if(node == target)
+            if (node == target)
                 continue;
 
             if (node.worldBound.Contains(position))
@@ -114,6 +114,12 @@ public class EdgeConnector: MouseManipulator
 
         return null;
     }
+
+    private bool CheckOverlapping(NodeElement toNode)
+    {
+        return m_Graph.Edges.Exists(edge =>
+            {
+                return edge.From == m_ConnectingEdge.From && edge.To == toNode;
+            });
+    }
 }
-
-

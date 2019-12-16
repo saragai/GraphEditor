@@ -13,19 +13,13 @@ MonoBehaviour:
   m_Name: graph.graph
   m_EditorClassIdentifier: 
   nodes:
-  - position: {x: 196, y: 56}
-    edges:
-    - fromId: 0
-      toId: 1
-    - fromId: 0
-      toId: 2
-  - position: {x: 122, y: 196}
+  - position: {x: 184, y: 248}
+    edges: []
+  - position: {x: 149, y: 107}
     edges:
     - fromId: 1
-      toId: 3
-  - position: {x: 316, y: 219}
+      toId: 0
+  - position: {x: 334, y: 145}
     edges:
     - fromId: 2
-      toId: 3
-  - position: {x: 272, y: 345}
-    edges: []
+      toId: 0

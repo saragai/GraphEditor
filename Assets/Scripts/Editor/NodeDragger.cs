@@ -7,11 +7,6 @@ public class NodeDragger : MouseManipulator
 {
     private bool m_Focus;
 
-    public NodeDragger()
-    {
-        // activators.Add(new ManipulatorActivationFilter { button = MouseButton.LeftMouse });
-    }
-
     protected override void RegisterCallbacksOnTarget()
     {
         target.RegisterCallback<MouseDownEvent>(OnMouseDown);
@@ -43,7 +38,7 @@ public class NodeDragger : MouseManipulator
 
         if(target is NodeElement node)
         {
-            node.SerializableNode.position = target.transform.position;
+            node.serializableNode.position = target.transform.position;
         }
 
         m_Focus = false;

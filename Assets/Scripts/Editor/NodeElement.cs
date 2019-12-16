@@ -4,14 +4,14 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor;
 
-public class NodeElement : Box, INode
+public class NodeElement : Box
 {
     public Color color;
     public Vector2 position;
 
     private readonly NodeDragger m_Mover;
 
-    public readonly SerializableNode SerializableNode;
+    public SerializableNode serializableNode;
 
     public NodeElement(SerializableNode node, string name)
     {
@@ -21,11 +21,26 @@ public class NodeElement : Box, INode
         transform.position = node.position;
         Add(new Label(name));
 
-
         this.AddManipulator(new NodeDragger());
         this.AddManipulator(new EdgeConnector());
 
-        SerializableNode = node;
+        this.AddManipulator(new ContextualMenuManipulator(evt =>
+        {
+            if (evt.target is NodeElement)
+            {
+                evt.menu.AppendSeparator();
+                evt.menu.AppendAction(
+                    "Remove Node",
+                    menuItem =>
+                    {
+                        var graph = GetFirstAncestorOfType<GraphEditorElement>();
+                        graph.RemoveNodeElement(this);
+                    },
+                    DropdownMenuAction.AlwaysEnabled);
+            }
+        }));
+
+        serializableNode = node;
     }
 
     public Vector2 GetStartPosition()

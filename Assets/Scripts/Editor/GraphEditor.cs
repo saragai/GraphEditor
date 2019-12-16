@@ -77,7 +77,6 @@ public class GraphEditorElement : VisualElement
         style.width = width;
         style.overflow = Overflow.Hidden;
         style.flexDirection = FlexDirection.Column;
-        // pickingMode = PickingMode.Ignore,
         transform.position = new Vector3(0, 0);
 
         this.AddManipulator(new ContextualMenuManipulator(evt =>
@@ -104,7 +103,7 @@ public class GraphEditorElement : VisualElement
 
         foreach(var node in Nodes)
         {
-            foreach(var edge in node.SerializableNode.edges)
+            foreach(var edge in node.serializableNode.edges)
             {
                 CreateEdgeElement(edge);
             }
@@ -141,9 +140,37 @@ public class GraphEditorElement : VisualElement
         return nodeElement;
     }
 
+    public void RemoveNodeElement(NodeElement node)
+    {
+        m_GraphAsset.nodes.Remove(node.serializableNode);
+
+        List<EdgeElement> toBeDestroyed = new List<EdgeElement>();
+        int id = Nodes.IndexOf(node);
+
+        for (int i = Edges.Count - 1; i >= 0; i--)
+        {
+            var edge = Edges[i].serializableEdge;
+
+            if (edge.toId == id || edge.fromId == id)
+            {
+                Edges.RemoveAt(i);
+                continue;
+            }
+
+            if (edge.fromId > id)
+                edge.fromId--;
+
+            if (edge.toId > id)
+                edge.toId--;
+        }
+
+        Remove(node);
+        Nodes.Remove(node);
+    }
+
     public EdgeElement CreateEdgeElement(SerializableEdge edge)
     {
-        var edgeElement = new EdgeElement(Nodes[edge.fromId], Nodes[edge.toId]);
+        var edgeElement = new EdgeElement(edge, Nodes[edge.fromId], Nodes[edge.toId]);
 
         Add(edgeElement);
         Edges.Add(edgeElement);
@@ -163,6 +190,11 @@ public class GraphEditorElement : VisualElement
 
     public void RemoveEdgeElement(EdgeElement edge)
     {
+        if (edge.serializableEdge != null)
+        {
+            edge.From.serializableNode.edges.Remove(edge.serializableEdge);
+        }
+
         Remove(edge);
         Edges.Remove(edge);
     }
@@ -175,14 +207,7 @@ public class GraphEditorElement : VisualElement
             toId = Nodes.IndexOf(edge.To)
         };
 
-        edge.From.SerializableNode.edges.Add(serializableEdge);
+        edge.From.serializableNode.edges.Add(serializableEdge);
+        edge.serializableEdge = serializableEdge;
     }
-}
-
-public interface INode
-{
-    Vector2 GetStartPosition();
-    Vector2 GetEndPosition();
-    Vector2 GetStartNorm();
-    Vector2 GetEndNorm();
 }
