@@ -144,7 +144,6 @@ public class GraphEditorElement : VisualElement
     {
         m_GraphAsset.nodes.Remove(node.serializableNode);
 
-        List<EdgeElement> toBeDestroyed = new List<EdgeElement>();
         int id = Nodes.IndexOf(node);
 
         for (int i = Edges.Count - 1; i >= 0; i--)
@@ -153,7 +152,7 @@ public class GraphEditorElement : VisualElement
 
             if (edge.toId == id || edge.fromId == id)
             {
-                Edges.RemoveAt(i);
+                RemoveEdgeElement(Edges[i]);
                 continue;
             }
 
