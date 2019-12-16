@@ -47,7 +47,7 @@ public class GraphEditor : EditorWindow
     {
         m_GraphAsset = graphAsset;
 
-        m_GraphEditorElement = new GraphEditorElement(graphAsset, position.height, position.width);
+        m_GraphEditorElement = new GraphEditorElement(graphAsset);
         rootVisualElement.Add(m_GraphEditorElement);
     }
 
@@ -69,12 +69,11 @@ public class GraphEditorElement : VisualElement
     public List<NodeElement> Nodes { get; private set; }
     public List<EdgeElement> Edges { get; private set; }
 
-    public GraphEditorElement(GraphAsset graphAsset, float height, float width)
+    public GraphEditorElement(GraphAsset graphAsset)
     {
         m_GraphAsset = graphAsset;
 
-        style.height = height;
-        style.width = width;
+        style.flexGrow = 1;
         style.overflow = Overflow.Hidden;
         style.flexDirection = FlexDirection.Column;
         transform.position = new Vector3(0, 0);
