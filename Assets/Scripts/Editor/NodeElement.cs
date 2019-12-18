@@ -4,35 +4,20 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor;
 
-public class NodeElement : VisualElement
+public class NodeElement : Box
 {
-    public NodeElement (string name, Color color, Vector2 pos)
+    public SerializableNode serializableNode;
+    public NodeElement (SerializableNode node)
     {
-        style.backgroundColor = new StyleColor(color);
+        serializableNode = node;
+
         style.position = Position.Absolute;
         style.height = 50;
         style.width = 100;
 
-        transform.position = pos;
-
-        Add(new Label(name));
+        transform.position = node.position;
 
         this.AddManipulator(new NodeDragger());
-
-        // this.AddManipulator(new ContextualMenuManipulator(OnContextMenuPopulate));
-    }
-
-    void OnContextMenuPopulate(ContextualMenuPopulateEvent evt)
-    {
-        evt.menu.AppendAction(
-            "Add Edge",  // 項目名
-            AddEdgeMenuAction,
-            DropdownMenuAction.AlwaysEnabled);
-    }
-
-    void AddEdgeMenuAction(DropdownMenuAction menuAction)
-    {
-        Debug.Log("Add Edge");
     }
 
 

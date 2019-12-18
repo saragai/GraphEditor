@@ -42,12 +42,15 @@ public class NodeDragger : MouseManipulator
 
     protected void OnMouseUp(MouseUpEvent evt)
     {
-        // CanStartManipulation()で条件を満たしたActivationのボタン条件と、
-        // このイベントを発火させているボタンが同じか
-        // (= 左クリックを離したときか)
         if (CanStopManipulation(evt))
         {
             target.ReleaseMouse();
+
+            if(target is NodeElement node)
+            {
+                node.serializableNode.position = target.transform.position;
+            }
+
             m_Focus = false;
         }
     }

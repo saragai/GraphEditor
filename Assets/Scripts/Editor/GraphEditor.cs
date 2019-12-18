@@ -1,62 +1,111 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEditor.Callbacks;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
+
 
 public class GraphEditor : EditorWindow
 {
     [MenuItem("Window/GraphEditor")]
     public static void ShowWindow()
     {
-        GraphEditor graphEditor = GetWindow<GraphEditor>();
+        GraphEditor graphEditor = CreateInstance<GraphEditor>();
+        graphEditor.Show();
         graphEditor.titleContent = new GUIContent("Graph Editor");
+
+        if(Selection.activeObject is GraphAsset graphAsset)
+        {
+            graphEditor.Initialize(graphAsset);
+        }
     }
 
-    List<NodeElement> m_Nodes = new List<NodeElement>();
+    [OnOpenAsset()]
+    private static bool OnOpenAsset(int instanceId, int line)
+    {
+        if(EditorUtility.InstanceIDToObject(instanceId) is GraphAsset)
+        {
+            ShowWindow();
+            return true;
+        }
+
+        return false;
+    }
+
+    GraphAsset m_GraphAsset;
+    GraphEditorElement m_GraphEditorElement;
 
     public void OnEnable()
     {
+        if (m_GraphAsset != null)
+        {
+            Initialize(m_GraphAsset);
+        }
+    }
+
+    public void Initialize(GraphAsset graphAsset)
+    {
+        m_GraphAsset = graphAsset;
+
         VisualElement root = this.rootVisualElement;
 
-        root.Add(new NodeElement("One", Color.red, new Vector2(100, 50)));
-        root.Add(new NodeElement("Two", Color.yellow, new Vector2(200, 50)));
+        m_GraphEditorElement = new GraphEditorElement(graphAsset);
+        root.Add(m_GraphEditorElement);
+    }
+}
 
-        root.AddManipulator(new ContextualMenuManipulator(OnContextMenuPopulate));
+public class GraphEditorElement: VisualElement
+{
+    GraphAsset m_GraphAsset;
+
+    List<NodeElement> m_Nodes;
+
+    public GraphEditorElement(GraphAsset graphAsset)
+    {
+        m_GraphAsset = graphAsset;
+
+        style.flexGrow = 1;
+        style.overflow = Overflow.Hidden;
+
+        this.AddManipulator(new ContextualMenuManipulator(OnContextMenuPopulate));
+
+        m_Nodes = new List<NodeElement>();
+
+        foreach(var node in graphAsset.nodes)
+        {
+            CreateNodeElement(node);
+        }
+    }
+
+    void CreateNodeElement(SerializableNode node)
+    {
+        var nodeElement = new NodeElement(node);
+
+        Add(nodeElement);
+        m_Nodes.Add(nodeElement);
     }
 
     void OnContextMenuPopulate(ContextualMenuPopulateEvent evt)
     {
-        // 項目を追加
+        if(evt.target != this)
+        {
+            return;
+        }
+
         evt.menu.AppendAction(
-            "Add Node",  // 項目名
-            AddEdgeMenuAction,  // 選択時の挙動
-            DropdownMenuAction.AlwaysEnabled  // 選択可能かどうか
+            "Add Node",
+            AddNodeMenuAction,
+            DropdownMenuAction.AlwaysEnabled
             );
     }
 
-    void AddEdgeMenuAction(DropdownMenuAction menuAction)
+    private void AddNodeMenuAction(DropdownMenuAction menuAction)
     {
-        Debug.Log("Add Node");
-    }
+        Vector2 mousePosition = menuAction.eventInfo.localMousePosition;
+        var node = new SerializableNode() { position = mousePosition };
 
-    private void OnGUI()
-    {
-    }
+        m_GraphAsset.nodes.Add(node);
 
-    private void DrawEdge(NodeElement startNode, NodeElement endNode)
-    {
-        var startPos = startNode.GetStartPosition();
-        var endPos = endNode.GetEndPosition();
-        var startNorm = startNode.GetStartNorm();
-        var endNorm = endNode.GetEndNorm();
-
-        Handles.DrawBezier(
-            startPos,
-            endPos,
-            startPos + 0.4f * Vector3.Dot(endPos - startPos, startNorm) * startNorm,
-            endPos + 0.4f * Vector3.Dot(startPos - endPos, endNorm) * endNorm,
-            color: Color.blue,
-            texture: null,
-            width: 2f);
+        CreateNodeElement(node);
     }
 }
