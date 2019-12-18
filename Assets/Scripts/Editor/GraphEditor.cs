@@ -75,8 +75,6 @@ public class GraphEditorElement : VisualElement
 
         style.flexGrow = 1;
         style.overflow = Overflow.Hidden;
-        style.flexDirection = FlexDirection.Column;
-        transform.position = new Vector3(0, 0);
 
         this.AddManipulator(new ContextualMenuManipulator(OnContextualMenuPopulate));
 
