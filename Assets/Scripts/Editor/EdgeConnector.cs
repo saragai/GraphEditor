@@ -147,10 +147,7 @@ public class EdgeConnector: MouseManipulator
 
     private bool CheckOverlapping(NodeElement toNode)
     {
-        return m_Graph.Edges.Exists(edge =>
-            {
-                return edge.From == m_ConnectingEdge.From && edge.To == toNode;
-            });
+        return m_Graph.SameEdgeExists(m_ConnectingEdge.From, toNode);
     }
 
     private void Abort()

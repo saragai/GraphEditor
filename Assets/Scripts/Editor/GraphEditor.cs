@@ -66,8 +66,8 @@ public class GraphEditorElement : VisualElement
 {
     GraphAsset m_GraphAsset;
 
-    public List<NodeElement> Nodes { get; private set; }
-    public List<EdgeElement> Edges { get; private set; }
+    List<NodeElement> m_Nodes;
+    List<EdgeElement> m_Edges; 
 
     public GraphEditorElement(GraphAsset graphAsset)
     {
@@ -78,19 +78,19 @@ public class GraphEditorElement : VisualElement
 
         this.AddManipulator(new ContextualMenuManipulator(OnContextualMenuPopulate));
 
-        Nodes = new List<NodeElement>();
-        Edges = new List<EdgeElement>();
+        m_Nodes = new List<NodeElement>();
+        m_Edges = new List<EdgeElement>();
 
         foreach (var node in m_GraphAsset.nodes)
         {
             CreateNodeElement(node);
         }
 
-        foreach(var node in Nodes)
+        foreach(var node in m_Nodes)
         {
             foreach(var edge in node.serializableNode.edges)
             {
-                CreateEdgeElement(edge);
+                CreateEdgeElement(edge, node, m_Nodes);
             }
         }
     }
@@ -109,27 +109,20 @@ public class GraphEditorElement : VisualElement
 
     private void AddNodeMenuAction(DropdownMenuAction menuAction)
     {
-        AddNode(menuAction.eventInfo.localMousePosition);
-    }
-
-    public void DrawEdge()
-    {
-        foreach (var edge in Edges)
-        {
-            edge.DrawEdge();
-        }
-    }
-
-    public void AddNode(Vector2 position)
-    {
-        var node = new SerializableNode()
-        {
-            position = position,
-        };
+        Vector2 mousePosition = menuAction.eventInfo.localMousePosition;
+        var node = new SerializableNode() { position = mousePosition };
 
         m_GraphAsset.nodes.Add(node);
 
         CreateNodeElement(node);
+    }
+
+    public void DrawEdge()
+    {
+        foreach (var edge in m_Edges)
+        {
+            edge.DrawEdge();
+        }
     }
 
     public NodeElement CreateNodeElement(SerializableNode node)
@@ -137,7 +130,7 @@ public class GraphEditorElement : VisualElement
         var nodeElement = new NodeElement(node, "test");
 
         Add(nodeElement);
-        Nodes.Add(nodeElement);
+        m_Nodes.Add(nodeElement);
 
         return nodeElement;
     }
@@ -146,35 +139,33 @@ public class GraphEditorElement : VisualElement
     {
         m_GraphAsset.nodes.Remove(node.serializableNode);
 
-        int id = Nodes.IndexOf(node);
+        int id = m_Nodes.IndexOf(node);
 
-        for (int i = Edges.Count - 1; i >= 0; i--)
+        for (int i = m_Edges.Count - 1; i >= 0; i--)
         {
-            var edge = Edges[i].serializableEdge;
+            var edgeElement = m_Edges[i];
+            var edge = edgeElement.serializableEdge;
 
-            if (edge.toId == id || edge.fromId == id)
+            if (edgeElement.To == node || edgeElement.From == node)
             {
-                RemoveEdgeElement(Edges[i]);
+                RemoveEdgeElement(edgeElement);
                 continue;
             }
-
-            if (edge.fromId > id)
-                edge.fromId--;
 
             if (edge.toId > id)
                 edge.toId--;
         }
 
         Remove(node);
-        Nodes.Remove(node);
+        m_Nodes.Remove(node);
     }
 
-    public EdgeElement CreateEdgeElement(SerializableEdge edge)
+    public EdgeElement CreateEdgeElement(SerializableEdge edge, NodeElement fromNode, List<NodeElement> nodeElements)
     {
-        var edgeElement = new EdgeElement(edge, Nodes[edge.fromId], Nodes[edge.toId]);
+        var edgeElement = new EdgeElement(edge, fromNode, nodeElements[edge.toId]);
 
         Add(edgeElement);
-        Edges.Add(edgeElement);
+        m_Edges.Add(edgeElement);
 
         return edgeElement;
     }
@@ -184,7 +175,7 @@ public class GraphEditorElement : VisualElement
         var edgeElement = new EdgeElement(from, position);
 
         Add(edgeElement);
-        Edges.Add(edgeElement);
+        m_Edges.Add(edgeElement);
 
         return edgeElement;
     }
@@ -197,18 +188,25 @@ public class GraphEditorElement : VisualElement
         }
 
         Remove(edge);
-        Edges.Remove(edge);
+        m_Edges.Remove(edge);
     }
 
     public void SerializeEdge(EdgeElement edge)
     {
         var serializableEdge = new SerializableEdge()
         {
-            fromId = Nodes.IndexOf(edge.From),
-            toId = Nodes.IndexOf(edge.To)
+            toId = m_Nodes.IndexOf(edge.To)
         };
 
         edge.From.serializableNode.edges.Add(serializableEdge);
         edge.serializableEdge = serializableEdge;
+    }
+
+    public bool SameEdgeExists(NodeElement from, NodeElement to)
+    {
+        return m_Edges.Exists(edge =>
+        {
+            return edge.From == from && edge.To == to;
+        });
     }
 }

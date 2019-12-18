@@ -19,6 +19,5 @@ public class SerializableNode
 [Serializable]
 public class SerializableEdge
 {
-    public int fromId;
 	public int toId;
 }
