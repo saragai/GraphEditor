@@ -4,14 +4,14 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class EdgeConnector: MouseManipulator
+public class EdgeConnector : MouseManipulator
 {
     bool m_Active = false;
-    EdgeElement m_ConnectingEdge;
-
-    GraphEditorElement m_Graph;
 
     ContextualMenuManipulator m_AddEdgeMenu;
+
+    GraphEditorElement m_Graph;
+    EdgeElement m_ConnectingEdge;
 
     public EdgeConnector()
     {
@@ -49,8 +49,6 @@ public class EdgeConnector: MouseManipulator
 
     protected override void RegisterCallbacksOnTarget()
     {
-        m_Graph = target.GetFirstAncestorOfType<GraphEditorElement>();
-
         target.RegisterCallback<MouseDownEvent>(OnMouseDown);
         target.RegisterCallback<MouseUpEvent>(OnMouseUp);
         target.RegisterCallback<MouseMoveEvent>(OnMouseMove);
@@ -67,37 +65,30 @@ public class EdgeConnector: MouseManipulator
         target.UnregisterCallback<MouseUpEvent>(OnMouseUp);
         target.UnregisterCallback<MouseMoveEvent>(OnMouseMove);
         target.UnregisterCallback<MouseCaptureOutEvent>(OnCaptureOut);
-
-        m_Graph = null;
     }
 
     protected void OnMouseDown(MouseDownEvent evt)
     {
-        if (m_Active)
-        {
-            evt.StopImmediatePropagation();
-            return;
-        }
-
         if (!CanStartManipulation(evt))
-        {
             return;
-        }
+
+        if (m_Active)
+            evt.StopImmediatePropagation();
     }
 
     protected void OnMouseUp(MouseUpEvent evt)
     {
+        if (!CanStopManipulation(evt))
+            return;
+
         if (!m_Active)
             return;
 
-        if (!CanStopManipulation(evt))
-        {
-            return;
-        }
+        var node = m_Graph.GetDesignatedNode(evt.originalMousePosition);
 
-        var node = GetDesignatedNode(evt.originalMousePosition);
-
-        if (node == null || CheckOverlapping(node))
+        if (node == null
+            || node == target
+            || m_Graph.ContainsEdge(m_ConnectingEdge.From, node))
         {
             m_Graph.RemoveEdgeElement(m_ConnectingEdge);
         }
@@ -114,44 +105,19 @@ public class EdgeConnector: MouseManipulator
 
     protected void OnMouseMove(MouseMoveEvent evt)
     {
-        if (m_Active)
+        if (!m_Active)
         {
-            m_ConnectingEdge.CandidatePosition = evt.originalMousePosition;
-            m_ConnectingEdge.MarkDirtyRepaint();
+            return;
         }
+
+        m_ConnectingEdge.ToPosition = evt.originalMousePosition;
     }
 
     private void OnCaptureOut(MouseCaptureOutEvent evt)
     {
-        if (m_Active)
-        {
-            Abort();
-        }
-    }
+        if (!m_Active)
+            return;
 
-    private NodeElement GetDesignatedNode(Vector2 position)
-    {
-        foreach (NodeElement node in m_Graph.Query<NodeElement>().Build().ToList())
-        {
-            if (node == target)
-                continue;
-
-            if (node.worldBound.Contains(position))
-            {
-                return node;
-            }
-        }
-
-        return null;
-    }
-
-    private bool CheckOverlapping(NodeElement toNode)
-    {
-        return m_Graph.SameEdgeExists(m_ConnectingEdge.From, toNode);
-    }
-
-    private void Abort()
-    {
         m_Graph.RemoveEdgeElement(m_ConnectingEdge);
         m_Active = false;
         m_ConnectingEdge = null;

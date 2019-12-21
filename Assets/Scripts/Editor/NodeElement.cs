@@ -1,25 +1,18 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor;
 
 public class NodeElement : Box
 {
-    private readonly NodeDragger m_Mover;
-
     public SerializableNode serializableNode;
-
-    public NodeElement(SerializableNode node, string name)
+    public NodeElement (SerializableNode node)
     {
         serializableNode = node;
 
         style.position = Position.Absolute;
         style.height = 50;
         style.width = 100;
-        transform.position = node.position;
 
-        Add(new Label(name));
+        transform.position = node.position;
 
         this.AddManipulator(new NodeDragger());
         this.AddManipulator(new EdgeConnector());
@@ -42,6 +35,7 @@ public class NodeElement : Box
         var graph = GetFirstAncestorOfType<GraphEditorElement>();
         graph.RemoveNodeElement(this);
     }
+
 
     public Vector2 GetStartPosition()
     {

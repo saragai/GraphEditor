@@ -11,9 +11,7 @@ public class NodeDragger : MouseManipulator
         activators.Add(new ManipulatorActivationFilter { button = MouseButton.LeftMouse });
     }
 
-    /// <summary>
     /// Manipulatorにターゲットがセットされたときに呼ばれる
-    /// </summary>
     protected override void RegisterCallbacksOnTarget()
     {
         m_Focus = false;
@@ -24,9 +22,7 @@ public class NodeDragger : MouseManipulator
         target.RegisterCallback<MouseCaptureOutEvent>(OnMouseCaptureOut);
     }
 
-    /// <summary>
     /// Manipulatorのターゲットが変わる直前に呼ばれる
-    /// </summary>
     protected override void UnregisterCallbacksFromTarget()
     {
         target.UnregisterCallback<MouseDownEvent>(OnMouseDown);
@@ -37,12 +33,6 @@ public class NodeDragger : MouseManipulator
 
     protected void OnMouseDown(MouseDownEvent evt)
     {
-        if (m_Focus)
-        {
-            evt.StopImmediatePropagation();
-            return;
-        }
-
         // 設定した有効化条件をみたすか (= 左クリックか)
         if (CanStartManipulation(evt))
         {
@@ -54,14 +44,11 @@ public class NodeDragger : MouseManipulator
 
     protected void OnMouseUp(MouseUpEvent evt)
     {
-        // CanStartManipulation()で条件を満たしたActivationのボタン条件と、
-        // このイベントを発火させているボタンが同じか
-        // (= 左クリックを離したときか)
         if (CanStopManipulation(evt))
         {
             target.ReleaseMouse();
 
-            if (target is NodeElement node)
+            if(target is NodeElement node)
             {
                 node.serializableNode.position = target.transform.position;
             }

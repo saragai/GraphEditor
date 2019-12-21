@@ -1,23 +1,21 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System;
 
-[CreateAssetMenu( fileName = "graph.graph.asset", menuName = "Graph/Graph" )]
-public class GraphAsset: ScriptableObject
+[CreateAssetMenu(fileName ="graph.asset", menuName ="Graph Asset")]
+public class GraphAsset : ScriptableObject
 {
-	public List<SerializableNode> nodes = new List<SerializableNode>();
+    public List<SerializableNode> nodes = new List<SerializableNode>();
 }
 
-[Serializable]
+[System.Serializable]
 public class SerializableNode
 {
-	public Vector2 position;
-	public List<SerializableEdge> edges = new List<SerializableEdge>();
+    public Vector2 position;
+    public List<SerializableEdge> edges = new List<SerializableEdge>();
 }
 
-[Serializable]
+[System.Serializable]
 public class SerializableEdge
 {
-	public int toId;
+    public int toId;
 }

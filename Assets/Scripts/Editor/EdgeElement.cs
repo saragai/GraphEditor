@@ -1,43 +1,26 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor;
 
 public class EdgeElement : VisualElement
 {
-    readonly float CURVE_SIZE = 50f;
-    readonly float INTERCEPT_WIDHT = 15f;
-
     public SerializableEdge serializableEdge;
-
-    private Vector2 m_CandidatePosition;
-    public Vector2 CandidatePosition
-    {
-        get { return m_CandidatePosition; }
-        set
-        {
-            m_CandidatePosition = this.WorldToLocal(value);
-        }
-    }
 
     public NodeElement From { get; private set; }
     public NodeElement To { get; private set; }
 
-    public EdgeElement(NodeElement from, Vector2 candidatePosition) : this()
+    Vector2 m_ToPosition;
+    public Vector2 ToPosition
     {
-        From = from;
-        m_CandidatePosition = candidatePosition;
+        get { return m_ToPosition; }
+        set
+        {
+            m_ToPosition = this.WorldToLocal(value);
+            MarkDirtyRepaint();
+        }
     }
 
-    public EdgeElement(SerializableEdge edge, NodeElement from, NodeElement to) : this()
-    {
-        serializableEdge = edge;
-        From = from;
-        To = to;
-    }
-
-    private EdgeElement()
+    public EdgeElement()
     {
         this.AddManipulator(new ContextualMenuManipulator(evt =>
         {
@@ -49,24 +32,38 @@ public class EdgeElement : VisualElement
                 {
                     var graph = GetFirstAncestorOfType<GraphEditorElement>();
                     graph.RemoveEdgeElement(this);
+                    MarkDirtyRepaint();
                 },
                 DropdownMenuAction.AlwaysEnabled);
             }
         }));
     }
 
-    public void ConnectTo(NodeElement to)
+    public EdgeElement(NodeElement fromNode, Vector2 toPosition):this()
     {
-        To = to;
+        From = fromNode;
+        ToPosition = toPosition;
+    }
+
+    public EdgeElement(SerializableEdge edge, NodeElement fromNode, NodeElement toNode):this()
+    {
+        serializableEdge = edge;
+        From = fromNode;
+        To = toNode;
+    }
+
+    public void ConnectTo(NodeElement node)
+    {
+        To = node;
         MarkDirtyRepaint();
     }
+
+    readonly float INTERCEPT_WIDHT = 15f;
 
     public override bool ContainsPoint(Vector2 localPoint)
     {
         if (From == null || To == null)
-        {
             return false;
-        }
 
         Vector2 start = From.GetStartPosition();
         Vector2 end = To.GetEndPosition();
@@ -80,54 +77,44 @@ public class EdgeElement : VisualElement
             return false;
         }
 
-        start = From.GetStartPosition() + CURVE_SIZE / 4f * From.GetStartNorm();
-        end = To.GetEndPosition() + CURVE_SIZE / 4f * To.GetEndNorm();
+        Vector2 a = From.GetStartPosition() + 12f * From.GetStartNorm();
+        Vector2 b = To.GetEndPosition() + 12f * To.GetEndNorm();
 
-        if (start == end)
+        if (a == b)
         {
-            return Vector2.Distance(localPoint, start) < INTERCEPT_WIDHT;
+            return Vector2.Distance(localPoint, a) < INTERCEPT_WIDHT;
         }
 
         float distance = Mathf.Abs(
-            (end.y - start.y) * localPoint.x
-            - (end.x - start.x) * localPoint.y
-            + end.x * start.y - end.y * start.x
-            ) / Vector2.Distance(start, end);
+            (b.y - a.y) * localPoint.x
+            - (b.x - a.x) * localPoint.y
+            + b.x * a.y - b.y * a.x
+            ) / Vector2.Distance(a, b);
 
-        if (distance < INTERCEPT_WIDHT)
-        {
-            return true;
-        }
-
-        return false;
+        return distance < INTERCEPT_WIDHT;
     }
 
     public void DrawEdge()
     {
         if (From != null && To != null)
         {
-            DrawEdge(From, To);
+            DrawEdge(
+                startPos: From.GetStartPosition(),
+                startNorm: From.GetStartNorm(),
+                endPos: To.GetEndPosition(),
+                endNorm: To.GetEndNorm());
         }
-        else if (From != null)
+        else
         {
-            DrawEdge(From, m_CandidatePosition, Vector2.zero);
+            if (From != null)
+            {
+                DrawEdge(
+                    startPos: From.GetStartPosition(),
+                    startNorm: From.GetStartNorm(),
+                    endPos: ToPosition,
+                    endNorm: Vector2.zero);
+            }
         }
-    }
-
-    private void DrawEdge(NodeElement startNode, NodeElement endNode)
-    {
-        var endPos = endNode.GetEndPosition();
-        var endNorm = endNode.GetEndNorm();
-
-        DrawEdge(startNode, endPos, endNorm);
-    }
-
-    private void DrawEdge(NodeElement startNode, Vector2 endPos, Vector2 endNorm)
-    {
-        var startPos = startNode.GetStartPosition();
-        var startNorm = startNode.GetStartNorm();
-
-        DrawEdge(startPos, startNorm, endPos, endNorm);
     }
 
     private void DrawEdge(Vector2 startPos, Vector2 startNorm, Vector2 endPos, Vector2 endNorm)
@@ -136,8 +123,8 @@ public class EdgeElement : VisualElement
         Handles.DrawBezier(
             startPos,
             endPos,
-            startPos + CURVE_SIZE * startNorm,
-            endPos + CURVE_SIZE * endNorm,
+            startPos + 50f * startNorm,
+            endPos + 50f * endNorm,
             color: Color.blue,
             texture: null,
             width: 2f);
