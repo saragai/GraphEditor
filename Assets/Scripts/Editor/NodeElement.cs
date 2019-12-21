@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEditor;
 
 public class NodeElement : Box
 {
@@ -18,6 +15,25 @@ public class NodeElement : Box
         transform.position = node.position;
 
         this.AddManipulator(new NodeDragger());
+        this.AddManipulator(new EdgeConnector());
+        this.AddManipulator(new ContextualMenuManipulator(OnContextualMenuPopulate));
+    }
+
+    private void OnContextualMenuPopulate(ContextualMenuPopulateEvent evt)
+    {
+        if (evt.target is NodeElement)
+        {
+            evt.menu.AppendAction(
+                "Remove Node",
+                RemoveNodeMenuAction,
+                DropdownMenuAction.AlwaysEnabled);
+        }
+    }
+
+    private void RemoveNodeMenuAction(DropdownMenuAction menuAction)
+    {
+        var graph = GetFirstAncestorOfType<GraphEditorElement>();
+        graph.RemoveNodeElement(this);
     }
 
 

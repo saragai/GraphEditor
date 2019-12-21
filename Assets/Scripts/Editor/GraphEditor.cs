@@ -2,8 +2,6 @@
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine.UIElements;
-using System.Collections.Generic;
-
 
 public class GraphEditor : EditorWindow
 {
@@ -52,60 +50,14 @@ public class GraphEditor : EditorWindow
         m_GraphEditorElement = new GraphEditorElement(graphAsset);
         root.Add(m_GraphEditorElement);
     }
-}
 
-public class GraphEditorElement: VisualElement
-{
-    GraphAsset m_GraphAsset;
-
-    List<NodeElement> m_Nodes;
-
-    public GraphEditorElement(GraphAsset graphAsset)
+    private void OnGUI()
     {
-        m_GraphAsset = graphAsset;
-
-        style.flexGrow = 1;
-        style.overflow = Overflow.Hidden;
-
-        this.AddManipulator(new ContextualMenuManipulator(OnContextMenuPopulate));
-
-        m_Nodes = new List<NodeElement>();
-
-        foreach(var node in graphAsset.nodes)
-        {
-            CreateNodeElement(node);
-        }
-    }
-
-    void CreateNodeElement(SerializableNode node)
-    {
-        var nodeElement = new NodeElement(node);
-
-        Add(nodeElement);
-        m_Nodes.Add(nodeElement);
-    }
-
-    void OnContextMenuPopulate(ContextualMenuPopulateEvent evt)
-    {
-        if(evt.target != this)
+        if(m_GraphEditorElement == null)
         {
             return;
         }
 
-        evt.menu.AppendAction(
-            "Add Node",
-            AddNodeMenuAction,
-            DropdownMenuAction.AlwaysEnabled
-            );
-    }
-
-    private void AddNodeMenuAction(DropdownMenuAction menuAction)
-    {
-        Vector2 mousePosition = menuAction.eventInfo.localMousePosition;
-        var node = new SerializableNode() { position = mousePosition };
-
-        m_GraphAsset.nodes.Add(node);
-
-        CreateNodeElement(node);
+        m_GraphEditorElement.DrawEdge();
     }
 }
