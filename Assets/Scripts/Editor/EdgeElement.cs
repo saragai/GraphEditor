@@ -15,13 +15,15 @@ public class EdgeElement : VisualElement
         get { return m_ToPosition; }
         set
         {
-            m_ToPosition = this.WorldToLocal(value);
+            m_ToPosition = value;
             MarkDirtyRepaint();
         }
     }
 
     public EdgeElement()
     {
+        style.position = Position.Absolute;
+
         this.AddManipulator(new ContextualMenuManipulator(evt =>
         {
             if (evt.target is EdgeElement)
@@ -65,17 +67,12 @@ public class EdgeElement : VisualElement
         if (From == null || To == null)
             return false;
 
-        Vector2 start = From.GetStartPosition();
-        Vector2 end = To.GetEndPosition();
-
-        Vector2 rectPos = new Vector2(Mathf.Min(start.x, end.x), Mathf.Min(start.y, end.y));
-        Vector2 rectSize = new Vector2(Mathf.Abs(start.x - end.x), Mathf.Abs(start.y - end.y));
-        Rect bound = new Rect(rectPos, rectSize);
-
-        if (!bound.Contains(localPoint))
+        if (!base.ContainsPoint(localPoint))
         {
             return false;
         }
+
+        localPoint = this.ChangeCoordinatesTo(parent, localPoint);
 
         Vector2 a = From.GetStartPosition() + 12f * From.GetStartNorm();
         Vector2 b = To.GetEndPosition() + 12f * To.GetEndNorm();
@@ -94,10 +91,36 @@ public class EdgeElement : VisualElement
         return distance < INTERCEPT_WIDHT;
     }
 
+    private Rect GetBoundingBox()
+    {
+        Vector2 start = From.GetStartPosition();
+        Vector2 end = To.GetEndPosition();
+
+        Vector2 rectPos = new Vector2(Mathf.Min(start.x, end.x) - 12f, Mathf.Min(start.y, end.y) - 12f);
+        Vector2 rectSize = new Vector2(Mathf.Abs(start.x - end.x) + 24f, Mathf.Abs(start.y - end.y) + 24f);
+        Rect bound = new Rect(rectPos, rectSize);
+
+        return bound;
+    }
+
+    private void UpdateLayout()
+    {
+        Rect bound = GetBoundingBox();
+
+        style.left = bound.x;
+        style.top = bound.y;
+        style.right = float.NaN;
+        style.bottom = float.NaN;
+        style.width = bound.width;
+        style.height = bound.height;
+    }
+
     public void DrawEdge()
     {
         if (From != null && To != null)
         {
+            UpdateLayout();
+
             DrawEdge(
                 startPos: From.GetStartPosition(),
                 startNorm: From.GetStartNorm(),

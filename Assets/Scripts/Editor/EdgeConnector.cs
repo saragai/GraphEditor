@@ -110,7 +110,7 @@ public class EdgeConnector : MouseManipulator
             return;
         }
 
-        m_ConnectingEdge.ToPosition = evt.originalMousePosition;
+        m_ConnectingEdge.ToPosition = m_Graph.WorldToLocal(evt.mousePosition);
     }
 
     private void OnCaptureOut(MouseCaptureOutEvent evt)
